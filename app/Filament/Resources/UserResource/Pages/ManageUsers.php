@@ -9,12 +9,14 @@ use Filament\Resources\Pages\ManageRecords;
 class ManageUsers extends ManageRecords
 {
     protected static string $resource = UserResource::class;
+
     protected function getHeaderWidgets(): array
     {
         return [
              UserResource\Widgets\UserOverview::class,
         ];
     }
+
     protected function getHeaderActions(): array
     {
         return [

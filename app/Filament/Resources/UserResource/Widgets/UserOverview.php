@@ -10,6 +10,13 @@ class UserOverview extends BaseWidget
 {
     protected static ?string $pollingInterval = null;
 
+    protected function getListeners(): array
+    {
+        return [
+            'refreshUserOverview' => '$refresh',
+        ];
+    }
+
     protected function getStats(): array
     {
         $usersCount = User::query()->selectRaw('

@@ -1,66 +1,192 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+## 介绍
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+在这个项目中，尝试使用 Filament 小组件创建统计用户信息的卡片用来显示有关用户的统计信息。
 
-## About Laravel
+并且通过添加 livewire 事件来刷新小组件的数据。
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## 安装
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+安装一个名为 `filament-widget-refresh-demo` 的项目：
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+```bash
+laravel new filament-widget-refresh-demo
+```
 
-## Learning Laravel
+通过下面的命令安装 Filament:
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+```bash
+cd filament-widget-refresh-demo
+composer require filament/filament
+php artisan filament:install --panels
+```
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+编辑一下 `users` 迁移文件，添加 `is_admin` 和 `is_active` 字段：
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+```php
+// database\migrations\2014_10_12_000000_create_users_table.php
+Schema::create('users', function (Blueprint $table) {
+    $table->id();
+    $table->string('name');
+    $table->string('email')->unique();
+    $table->timestamp('email_verified_at')->nullable();
+    $table->string('password');
+    $table->boolean('is_admin');
+    $table->boolean('is_active');
+    $table->rememberToken();
+    $table->timestamps();
+});
+```
 
-## Laravel Sponsors
+编辑工厂文件，添加对新增的字段的支持。
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+```php
+// databse\factories\UserFactory.php
+public function definition(): array
+{
+    return [
+        'name' => fake()->name(),
+        'email' => fake()->unique()->safeEmail(),
+        'email_verified_at' => now(),
+        'password' => 'password',
+        'is_admin' => fake()->boolean(),
+        'is_active' => fake()->boolean(),
+        'remember_token' => Str::random(10),
+    ];
+}
+```
 
-### Premium Partners
+修改数据库填充文件 `DatabaseSeeder.php`。
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+```php
+//database\seeders\DatabaseSeeder.php
 
-## Contributing
+use App\Models\User;
+public function run()
+{
+    User::factory()->create([
+        'name' => 'Test User',
+        'email' => 'test@example.com',
+    ]);
+    User::factory(100)->create();
+}
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+编辑用户模型的 `fillable` 属性。
 
-## Code of Conduct
+```php
+// app\Models\User.php
+protected $fillable = [
+    'name',
+    'email',
+    'password',
+    'is_active',
+    'is_admin',
+];
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+运行迁移命令，填充数据：
 
-## Security Vulnerabilities
+```bash
+php artisan migrate --seed
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+## 用户资源
 
-## License
+通过下面的命令可以快速创建用户资源管理和小组件：
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+```bash
+php artisan make:filament-resource User --simple --generate
+php artisan make:filament-widget UserOverview --resource=UserResource --stats-overview
+```
+
+在新建的小组件代码类中编写逻辑用于显示不同的统计数据：
+
+```php
+// app\Filament\Resources\UserResource\Widgets\UserOverview.php
+<?php
+
+namespace App\Filament\Resources\UserResource\Widgets;
+
+use App\Models\User;
+use Filament\Widgets\StatsOverviewWidget as BaseWidget;
+use Filament\Widgets\StatsOverviewWidget\Stat;
+
+class UserOverview extends BaseWidget
+{
+    protected static ?string $pollingInterval = null;
+
+    protected function getStats(): array
+    {
+        $usersCount = User::query()->selectRaw('
+            COUNT(*) as total,
+            SUM(CASE WHEN is_admin THEN 1 ELSE 0 END) AS admin,
+            SUM(CASE WHEN is_active THEN 1 ELSE 0 END) AS active
+        ')->first();
+
+        return [
+            Stat::make('Total', $usersCount->total)
+                ->color('primary')
+                ->description('Total users'),
+
+            Stat::make('Admin', $usersCount->admin)
+                ->color('danger')
+                ->description('Admin users'),
+
+            Stat::make('Active', $usersCount->active)
+                ->color('success')
+                ->description('Active users'),
+
+        ];
+    }
+}
+```
+
+添加 `getHeaderWidgets()` 方法，并添加对小组件的引用：
+
+```php
+// app\Filament\Resources\UserResource\Pages\ManageUsers.php
+protected function getHeaderWidgets(): array
+{
+    return [
+        UserOverview::class,
+    ];
+}
+```
+
+当删除用户时，这些小部件不会更新，刷新页面时才能更新小组件的数据。
+
+## 自动刷新小组件
+
+利用 Livewire 事件监听器来完成当更新资源时自动刷新小组件。
+
+### Livewire 事件监听器
+
+Livewire 的事件监听器是一个键值对，其中键是需要监听的事件名，值是要在组件上调用的方法。
+
+也可以使用 `$refresh` 魔术操作来重新渲染组件，而无需触发任何操作。
+
+下面需要将用户的小组件 `OverviewWidget` 中添加事件监听器：
+
+```php
+// app\Filament\Resources\UserResource\Widgets\UserOverview.php
+
+protected function getListeners(): array
+{
+    return [
+        'refreshUserOverview' => '$refresh',
+    ];
+}
+```
+
+### `after()` 方法
+
+```php
+// app\Filament\Resources\UserResource\Pages\UserResource.php
+
+Tables\Actions\DeleteAction::make()
+    ->after(function (Pages\ManageUsers $livewire) {
+        $livewire->dispatch('refreshUserOverview');
+    }),
+```
+
+此刻再对用户数据删除时会自动更新小组件的数据。
