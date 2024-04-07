@@ -1,8 +1,11 @@
 ## 介绍
 
+
 在这个项目中，尝试使用 Filament 小组件创建统计用户信息的卡片用来显示有关用户的统计信息。
 
 并且通过添加 livewire 事件来刷新小组件的数据。
+
+![](https://github.com/curder/filament-widget-refresh-demo/assets/8327004/59af78b5-b618-41b0-8fb7-31c80c07e54f)
 
 ## 安装
 
@@ -190,3 +193,5 @@ Tables\Actions\DeleteAction::make()
 ```
 
 此刻再对用户数据删除时会自动更新小组件的数据。
+
+![](https://github.com/curder/filament-widget-refresh-demo/assets/8327004/702ccbbd-7341-49a3-b94b-27a90ca4b290)
